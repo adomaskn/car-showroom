@@ -1,0 +1,33 @@
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #f3f5f9;
+  background: #0e1117;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at 20% 10%, #202938, #0e1117 55%);
+}
+
+#showroom {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#status {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(9, 12, 17, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #d5dded;
+  font-size: 0.9rem;
+}
