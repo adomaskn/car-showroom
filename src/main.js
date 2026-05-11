@@ -100,7 +100,7 @@ turntableGroup.position.y = 0.235;
 scene.add(turntableGroup);
 
 const loader = new GLTFLoader();
-const modelPath = '/models/cars/car.glb';
+const modelPath = `${import.meta.env.BASE_URL}models/cars/car.glb`;
 
 status.textContent = `Checkpoint 2/4: Scene ready. Looking for ${modelPath}...`;
 
@@ -143,7 +143,7 @@ loader.load(
   undefined,
   (error) => {
     console.error(error);
-    status.textContent = 'Checkpoint 3/4 failed: put your model at /public/models/cars/car.glb';
+    status.textContent = `Checkpoint 3/4 failed: could not load ${modelPath}`;
   }
 );
 
