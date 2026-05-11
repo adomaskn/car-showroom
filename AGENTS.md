@@ -19,6 +19,12 @@ Maintain and improve the 3D car showroom with stable behavior, clean visuals, an
 - `index.html`: canvas and overlay DOM
 - `public/models/cars/car.glb`: default car asset path
 
+## Current UX Expectations
+
+- Language is controlled by URL query param `?lang=en|lt`.
+- In-page language toggle button is visible (top-right) and switches `EN`/`LT` without reloading scene.
+- Home button keeps current language by including `?lang=...` in its URL.
+
 ## Development Rules
 
 1. Keep the app runnable with:
@@ -50,6 +56,7 @@ Manual checks:
 3. Platform rotation works.
 4. Camera orbit/zoom works.
 5. Home button is visible and link works.
+6. Language toggle is visible and updates UI text + URL query param.
 
 ## Performance Notes
 
