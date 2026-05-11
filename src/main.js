@@ -1,10 +1,76 @@
-import './style.css';
+﻿import './style.css';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+const supportedLangs = ['en', 'lt'];
+const params = new URLSearchParams(window.location.search);
+const requestedLang = (params.get('lang') || 'en').toLowerCase();
+let currentLang = supportedLangs.includes(requestedLang) ? requestedLang : 'en';
+
+const i18n = {
+  en: {
+    title: 'Car Showroom',
+    home: 'Home',
+    toggleAriaLabel: 'Switch language',
+    loading: 'Loading 3D showroom...',
+    checkpoint2: (path) => `Checkpoint 2/4: Scene ready. Looking for ${path}...`,
+    checkpoint3Success: 'Checkpoint 3/4: Car model loaded on rotating platform.',
+    checkpoint3Fail: (path) => `Checkpoint 3/4 failed: could not load ${path}`,
+    checkpoint4: 'Checkpoint 4/4: Renderer running.'
+  },
+  lt: {
+    title: 'Automobiliu Ekspozicija',
+    home: 'Pradzia',
+    toggleAriaLabel: 'Pakeisti kalba',
+    loading: 'Kraunama 3D automobiliu ekspozicija...',
+    checkpoint2: (path) => `Patikros taskas 2/4: Scena parengta. Ieskoma ${path}...`,
+    checkpoint3Success: 'Patikros taskas 3/4: Automobilio modelis ikeltas ant besisukancios platformos.',
+    checkpoint3Fail: (path) => `Patikros taskas 3/4 nepavyko: nepavyko ikelti ${path}`,
+    checkpoint4: 'Patikros taskas 4/4: Atvaizdavimas veikia.'
+  }
+};
+
 const canvas = document.querySelector('#showroom');
 const status = document.querySelector('#status');
+const homeLink = document.querySelector('#home-link');
+const langToggle = document.querySelector('#lang-toggle');
+let statusKey = 'loading';
+
+function getStatusText(lang, key, path) {
+  const t = i18n[lang];
+  if (key === 'checkpoint2') return t.checkpoint2(path);
+  if (key === 'checkpoint3Success') return t.checkpoint3Success;
+  if (key === 'checkpoint3Fail') return t.checkpoint3Fail(path);
+  if (key === 'checkpoint4') return t.checkpoint4;
+  return t.loading;
+}
+
+function applyLanguage() {
+  const t = i18n[currentLang];
+  document.documentElement.lang = currentLang;
+  document.title = t.title;
+
+  if (homeLink) {
+    const homeUrl = new URL(homeLink.href);
+    homeUrl.searchParams.set('lang', currentLang);
+    homeLink.href = homeUrl.toString();
+    homeLink.textContent = t.home;
+  }
+
+  if (langToggle) {
+    langToggle.textContent = currentLang === 'en' ? 'LT' : 'EN';
+    langToggle.setAttribute('aria-label', t.toggleAriaLabel);
+  }
+}
+
+function setStatus(nextStatusKey, path) {
+  statusKey = nextStatusKey;
+  status.textContent = getStatusText(currentLang, statusKey, path);
+}
+
+applyLanguage();
+setStatus('loading');
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#0b0f16');
@@ -102,7 +168,7 @@ scene.add(turntableGroup);
 const loader = new GLTFLoader();
 const modelPath = `${import.meta.env.BASE_URL}models/cars/car.glb`;
 
-status.textContent = `Checkpoint 2/4: Scene ready. Looking for ${modelPath}...`;
+setStatus('checkpoint2', modelPath);
 
 loader.load(
   modelPath,
@@ -138,14 +204,24 @@ loader.load(
     });
 
     turntableGroup.add(model);
-    status.textContent = 'Checkpoint 3/4: Car model loaded on rotating platform.';
+    setStatus('checkpoint3Success', modelPath);
   },
   undefined,
   (error) => {
     console.error(error);
-    status.textContent = `Checkpoint 3/4 failed: could not load ${modelPath}`;
+    setStatus('checkpoint3Fail', modelPath);
   }
 );
+
+if (langToggle) {
+  langToggle.addEventListener('click', () => {
+    currentLang = currentLang === 'en' ? 'lt' : 'en';
+    params.set('lang', currentLang);
+    history.replaceState(null, '', `${window.location.pathname}?${params.toString()}${window.location.hash}`);
+    applyLanguage();
+    setStatus(statusKey, modelPath);
+  });
+}
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -162,4 +238,4 @@ function animate() {
 }
 
 animate();
-status.textContent = 'Checkpoint 4/4: Renderer running.';
+setStatus('checkpoint4', modelPath);

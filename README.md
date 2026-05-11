@@ -1,4 +1,4 @@
-# Car Showroom
+﻿# Car Showroom
 
 A game-inspired 3D car showroom built with `Three.js` and `Vite`.
 
@@ -8,6 +8,21 @@ The app loads a car model (`.glb`) into a stylized garage scene with:
 - A curved backdrop for depth
 - Orbit camera controls for inspection
 - A Home button linking to the main portfolio site
+
+## Language Support
+
+The showroom supports URL language switching via the `lang` query parameter and an in-page language toggle button.
+
+Examples:
+- `https://adomaskn.github.io/car-showroom/?lang=en`
+- `https://adomaskn.github.io/car-showroom/?lang=lt`
+
+Behavior:
+- Supported languages: `en`, `lt`
+- Any unknown `lang` value falls back to English (`en`).
+- The top-right toggle switches language between `EN` and `LT` without reloading the scene.
+- The URL is updated on toggle (`?lang=...`) so links remain shareable.
+- The Home button preserves the current language by appending `?lang=...` to the main-page URL.
 
 ## Demo Features
 
@@ -108,6 +123,17 @@ This project can be deployed to GitHub Pages or any static host.
 Basic flow:
 1. Run `npm run build`
 2. Deploy the `dist/` directory as static assets
+
+## Pre-Push Checklist
+
+Before pushing to `main`:
+1. Run `npm run build` and confirm it succeeds.
+2. Manually verify:
+   - Model loads from `public/models/cars/car.glb`
+   - Platform rotates and OrbitControls work
+   - Home button is visible and links correctly
+   - Language toggle switches UI text and updates URL `?lang=...`
+3. Confirm `README.md` and `AGENTS.md` reflect any user-facing behavior changes.
 
 ## Roadmap Ideas
 
