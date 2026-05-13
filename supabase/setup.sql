@@ -9,9 +9,13 @@ create table if not exists public.car_models (
   name text not null check (char_length(name) between 1 and 80),
   storage_path text not null unique,
   original_file_name text not null,
+  uploaded_by_email text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.car_models
+add column if not exists uploaded_by_email text;
 
 create or replace function public.set_car_models_updated_at()
 returns trigger

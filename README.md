@@ -7,6 +7,7 @@ A game-inspired 3D car showroom built with `Three.js` and `Vite`, now with authe
 - Upload `.glb` files from the web UI.
 - Persist model metadata + files in Supabase (`Auth` + `Postgres` + `Storage`).
 - Toggle, rename, and delete uploaded models from the same in-page panel.
+- Show origin for the selected model (default database model or uploader identity).
 - Keep the default model at `/models/cars/car.glb`.
 
 ## Modes
@@ -43,6 +44,7 @@ This creates:
 - RLS policies (`select/insert/update/delete` per authenticated user)
 - Private storage bucket `car-models`
 - Storage policies scoped to each user folder (`<user_id>/...`)
+- Optional uploader metadata column (`uploaded_by_email`) for origin display
 
 ### 3) Add environment variables
 
@@ -58,7 +60,13 @@ VITE_SUPABASE_MODELS_TABLE=car_models
 ### 4) Auth settings
 
 Enable Email auth in Supabase Authentication settings.
-The app uses magic-link sign-in from the model panel.
+For first-time signup confirmation and normal password logins afterwards:
+- Keep `Confirm email` enabled in `Authentication -> Providers -> Email`.
+- Keep your allowed redirect URLs configured for your app.
+
+The app uses email + password authentication:
+- Sign up: confirm email once from inbox.
+- Log in later: email + password directly (no one-time codes).
 
 For local dev URL, include:
 - `http://localhost:5173/car-showroom/`
@@ -122,6 +130,7 @@ Language is controlled by URL query param `?lang=en|lt` and toggle button.
 - Upload limit is 40MB per `.glb`.
 - In Supabase mode, users must sign in before cloud model management.
 - In local API mode, model management requires local server availability.
+- Selected model shows its origin in the panel.
 
 ## Project Structure
 

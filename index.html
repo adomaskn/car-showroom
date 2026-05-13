@@ -18,12 +18,19 @@
       <div id="auth-section">
         <p id="auth-status"></p>
         <form id="auth-form">
-          <label id="auth-email-label" for="auth-email">
+          <label id="auth-username-label" for="auth-username">
             Email
           </label>
-          <input id="auth-email" name="auth-email" type="email" autocomplete="email" />
-          <button id="auth-send-link-button" type="submit">
-            Send sign-in link
+          <input id="auth-username" name="auth-username" type="text" autocomplete="username" />
+          <label id="auth-password-label" for="auth-password">
+            Password
+          </label>
+          <input id="auth-password" name="auth-password" type="password" autocomplete="current-password" />
+          <button id="auth-sign-in-button" type="submit">
+            Sign in
+          </button>
+          <button id="auth-sign-up-button" type="button">
+            Create account
           </button>
         </form>
         <button id="auth-sign-out-button" type="button">
@@ -34,6 +41,10 @@
         Active model
       </label>
       <select id="model-select" name="model-select"></select>
+      <div id="model-origin" aria-live="polite">
+        <span id="model-origin-label">Model origin</span>
+        <span id="model-origin-value">Original database model</span>
+      </div>
       <form id="upload-form">
         <label id="model-upload-label" for="model-file">
           Upload .glb
