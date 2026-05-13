@@ -4,11 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node scripts/dev.mjs",
+    "dev:client": "vite --configLoader runner",
+    "dev:server": "node server/server.js --dev",
+    "build": "vite build --configLoader runner",
+    "preview": "vite preview --configLoader runner",
+    "start": "node server/server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
     "three": "^0.176.0"
   },
   "devDependencies": {

@@ -1,42 +1,127 @@
-﻿# Car Showroom
+# Car Showroom
 
-A game-inspired 3D car showroom built with `Three.js` and `Vite`.
+A game-inspired 3D car showroom built with `Three.js` and `Vite`, now with authenticated cloud model storage via Supabase.
 
-The app loads a car model (`.glb`) into a stylized garage scene with:
-- A rotating platform
-- Soft showroom lighting and shadows
-- A curved backdrop for depth
-- Orbit camera controls for inspection
-- A Home button linking to the main portfolio site
+## Highlights
+
+- Upload `.glb` files from the web UI.
+- Persist model metadata + files in Supabase (`Auth` + `Postgres` + `Storage`).
+- Toggle, rename, and delete uploaded models from the same in-page panel.
+- Keep the default model at `/models/cars/car.glb`.
+
+## Modes
+
+This app supports two runtime modes:
+
+1. Supabase cloud mode (recommended):
+   - Multi-user authenticated model library.
+   - Works on static hosting after build.
+2. Local API fallback mode:
+   - Uses `server/server.js` with local JSON + filesystem storage.
+   - Useful for local development without Supabase config.
+
+Mode selection is automatic:
+- If `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set -> Supabase mode.
+- Otherwise -> local API mode.
+
+## Supabase Setup (Recommended)
+
+### 1) Create project
+
+Create a Supabase project and copy:
+- Project URL
+- `anon` public key
+
+### 2) Run SQL setup
+
+In Supabase SQL Editor, run:
+
+- `supabase/setup.sql`
+
+This creates:
+- `public.car_models` table
+- RLS policies (`select/insert/update/delete` per authenticated user)
+- Private storage bucket `car-models`
+- Storage policies scoped to each user folder (`<user_id>/...`)
+
+### 3) Add environment variables
+
+Copy `.env.example` to `.env.local` and fill values:
+
+```env
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-public-anon-key
+VITE_SUPABASE_STORAGE_BUCKET=car-models
+VITE_SUPABASE_MODELS_TABLE=car_models
+```
+
+### 4) Auth settings
+
+Enable Email auth in Supabase Authentication settings.
+The app uses magic-link sign-in from the model panel.
+
+For local dev URL, include:
+- `http://localhost:5173/car-showroom/`
+
+For production, include your deployed app URL.
+
+## Local Development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start app:
+
+```bash
+npm run dev
+```
+
+3. Open:
+
+- `http://localhost:5173/car-showroom/`
+
+## Deployment
+
+### Static hosting with Supabase mode
+
+1. Configure `VITE_SUPABASE_*` vars in your host.
+2. Run `npm run build`.
+3. Deploy `dist/`.
+
+No Node API server is required in this mode.
+
+### Node hosting with local API mode
+
+1. Run `npm run build`.
+2. Run `npm run start`.
+3. Open `http://localhost:8787/car-showroom/`.
+
+## Available Scripts
+
+- `npm run dev`: API server + Vite dev server
+- `npm run dev:server`: local API server only
+- `npm run dev:client`: Vite dev server only
+- `npm run build`: production build
+- `npm run start`: serve built app + local API mode
+- `npm run preview`: Vite preview (no local API)
 
 ## Language Support
 
-The showroom supports URL language switching via the `lang` query parameter and an in-page language toggle button.
+Language is controlled by URL query param `?lang=en|lt` and toggle button.
 
-Examples:
-- `https://adomaskn.github.io/car-showroom/?lang=en`
-- `https://adomaskn.github.io/car-showroom/?lang=lt`
+- Supported: `en`, `lt`
+- Unknown values fall back to `en`
+- Home button preserves current language via `?lang=...`
 
-Behavior:
-- Supported languages: `en`, `lt`
-- Any unknown `lang` value falls back to English (`en`).
-- The top-right toggle switches language between `EN` and `LT` without reloading the scene.
-- The URL is updated on toggle (`?lang=...`) so links remain shareable.
-- The Home button preserves the current language by appending `?lang=...` to the main-page URL.
+## Model Library Behavior
 
-## Demo Features
-
-- Real-time 3D rendering in browser (`WebGL`)
-- GLB model loading via `GLTFLoader`
-- Auto-centering and auto-scaling for imported car models
-- Responsive canvas that adapts to viewport size
-
-## Tech Stack
-
-- `Vite`
-- `Three.js`
-- Vanilla JavaScript (ES modules)
-- CSS
+- Default model cannot be renamed or deleted.
+- Upload limit is 40MB per `.glb`.
+- In Supabase mode, users must sign in before cloud model management.
+- In local API mode, model management requires local server availability.
 
 ## Project Structure
 
@@ -46,102 +131,30 @@ car-showroom/
     models/
       cars/
         car.glb
+      uploads/
+  server/
+    data/
+    server.js
+  scripts/
+    dev.mjs
   src/
     main.js
     style.css
+  supabase/
+    setup.sql
+  .env.example
   index.html
-  package.json
-  README.md
+  vite.config.js
 ```
 
-## Requirements
+## Validation Checklist
 
-- `Node.js` 18+ (recommended latest LTS)
-- `npm` 9+
-
-## Getting Started
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Run development server:
-```bash
-npm run dev
-```
-
-3. Open the local URL shown in terminal (usually `http://localhost:5173`).
-
-## Car Model Setup
-
-Place your model at:
-
-`public/models/cars/car.glb`
-
-Notes:
-- `.glb` is preferred because it bundles mesh, materials, and textures into one file.
-- The scene expects the filename `car.glb` by default.
-- If your model uses very large scale, the loader normalizes size automatically.
-
-## Available Scripts
-
-- `npm run dev`: Start local dev server
-- `npm run build`: Create production build in `dist/`
-- `npm run preview`: Preview production build locally
-
-## Showroom Controls
-
-- Left mouse drag: Orbit camera
-- Scroll wheel: Zoom in/out
-- Right mouse drag (or equivalent): Pan
-
-## Customization Guide
-
-- Change model path: update `modelPath` in `src/main.js`
-- Adjust platform rotation speed: edit `turntableGroup.rotation.y += ...` in `src/main.js`
-- Tweak lighting mood: update light colors/intensities in `src/main.js`
-- Update Home button URL/style: edit `index.html` and `src/style.css`
-
-## Troubleshooting
-
-- Model not visible:
-  - Confirm file exists at `public/models/cars/car.glb`
-  - Check browser console for loading errors
-  - Verify model exports correctly from your DCC tool
-
-- Scene is dark:
-  - Increase key/fill light intensity in `src/main.js`
-
-- Build warning about chunk size:
-  - Current warning is expected for `three.js` in a small single-bundle app.
-
-## Deployment
-
-This project can be deployed to GitHub Pages or any static host.
-
-Basic flow:
-1. Run `npm run build`
-2. Deploy the `dist/` directory as static assets
-
-## Pre-Push Checklist
-
-Before pushing to `main`:
-1. Run `npm run build` and confirm it succeeds.
-2. Manually verify:
-   - Model loads from `public/models/cars/car.glb`
-   - Platform rotates and OrbitControls work
-   - Home button is visible and links correctly
-   - Language toggle switches UI text and updates URL `?lang=...`
-3. Confirm `README.md` and `AGENTS.md` reflect any user-facing behavior changes.
-
-## Roadmap Ideas
-
-- Garage environment presets (day/night/studio)
-- Wheel and paint customization UI
-- Multiple car selection
-- Postprocessing effects (bloom, vignette, SSR alternatives)
-
-## License
-
-No license specified yet. Add one if you plan to distribute publicly.
+1. Scene renders without console errors.
+2. Default model loads and appears centered.
+3. Platform rotation works.
+4. Orbit camera + zoom works.
+5. Home button is visible and keeps `?lang=...`.
+6. Language toggle updates UI text and URL query param.
+7. Uploading a `.glb` adds it to selector and loads it.
+8. Renaming updates selector label.
+9. Deleting removes model and falls back safely when active.

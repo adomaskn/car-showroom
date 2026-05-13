@@ -2,3 +2,8 @@ node_modules/
 dist/
 .DS_Store
 .vscode/
+.env.local
+.env.*.local
+server/data/models.json
+public/models/uploads/*
+!public/models/uploads/.gitkeep

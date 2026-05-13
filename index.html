@@ -13,6 +13,50 @@
     <button id="lang-toggle" type="button" aria-label="Switch language">
       LT
     </button>
+    <section id="model-panel" aria-label="Model controls">
+      <h2 id="model-panel-title">Models</h2>
+      <div id="auth-section">
+        <p id="auth-status"></p>
+        <form id="auth-form">
+          <label id="auth-email-label" for="auth-email">
+            Email
+          </label>
+          <input id="auth-email" name="auth-email" type="email" autocomplete="email" />
+          <button id="auth-send-link-button" type="submit">
+            Send sign-in link
+          </button>
+        </form>
+        <button id="auth-sign-out-button" type="button">
+          Sign out
+        </button>
+      </div>
+      <label id="model-select-label" for="model-select">
+        Active model
+      </label>
+      <select id="model-select" name="model-select"></select>
+      <form id="upload-form">
+        <label id="model-upload-label" for="model-file">
+          Upload .glb
+        </label>
+        <input id="model-file" name="model-file" type="file" accept=".glb,model/gltf-binary" />
+        <button id="upload-button" type="submit">
+          Add model
+        </button>
+      </form>
+      <form id="rename-form">
+        <label id="model-rename-label" for="model-name-input">
+          Model name
+        </label>
+        <input id="model-name-input" name="model-name-input" type="text" maxlength="80" />
+        <button id="rename-button" type="submit">
+          Rename model
+        </button>
+      </form>
+      <button id="delete-button" type="button">
+        Delete model
+      </button>
+      <p id="model-feedback" aria-live="polite"></p>
+    </section>
     <div id="status">Loading 3D showroom...</div>
     <script type="module" src="/src/main.js"></script>
   </body>
