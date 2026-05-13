@@ -13,6 +13,8 @@ const defaultModelPath = `${import.meta.env.BASE_URL}models/cars/car.glb`;
 const defaultModelId = 'default-car';
 const maxUploadBytes = 40 * 1024 * 1024;
 const maxModelNameLength = 80;
+const minPasswordLength = 8;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
 const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
@@ -35,15 +37,24 @@ const i18n = {
     modelSelectLabel: 'Active model',
     modelUploadLabel: 'Upload .glb model',
     modelRenameLabel: 'Model name',
+    modelOriginLabel: 'Model origin',
+    modelOriginDefault: 'Original database model',
+    modelOriginLocalUpload: 'Local upload',
+    modelOriginCloudUploadUnknown: 'Supabase upload',
+    modelOriginUploadedByYou: 'Uploaded by you',
+    modelOriginUploadedByUser: (user) => `Uploaded by ${user}`,
+    modelOriginUnavailable: 'Unknown origin',
     renamePlaceholder: 'Select an uploaded model',
     uploadButton: 'Add model',
     renameButton: 'Rename model',
     deleteButton: 'Delete model',
-    authEmailLabel: 'Email for sign-in',
-    authSendLinkButton: 'Send sign-in link',
+    authUsernameLabel: 'Email',
+    authPasswordLabel: 'Password',
+    authSignInButton: 'Sign in',
+    authSignUpButton: 'Create account',
     authSignOutButton: 'Sign out',
     authLocalModeStatus: 'Using local model API mode.',
-    authCloudSignedOutStatus: 'Cloud mode: sign in to manage your model library.',
+    authCloudSignedOutStatus: 'Cloud mode: sign in or create account to manage your model library.',
     authCloudSignedInStatus: (email) => `Cloud mode: signed in as ${email}.`,
     uploadInProgress: 'Uploading model...',
     uploadSuccess: (name) => `Model added: ${name}.`,
@@ -58,13 +69,20 @@ const i18n = {
     deleteFail: (reason) => `Delete failed: ${reason}`,
     deleteDefaultBlocked: 'Default model cannot be deleted.',
     deleteConfirm: (name) => `Delete model "${name}"?`,
-    authRequired: 'Sign in to manage cloud models.',
-    authLinkInProgress: 'Sending sign-in link...',
-    authLinkSent: 'Sign-in link sent. Check your email.',
-    authLinkFail: (reason) => `Sign-in link failed: ${reason}`,
+    authRequired: 'Sign in with email/password to manage cloud models.',
+    authSignInInProgress: 'Signing in...',
+    authSignInSuccess: 'Signed in successfully.',
+    authSignInFail: (reason) => `Sign-in failed: ${reason}`,
+    authSignUpInProgress: 'Creating account...',
+    authSignUpSuccess: 'Account created and signed in.',
+    authSignUpFail: (reason) => `Create account failed: ${reason}`,
+    authSignUpNeedsVerification: 'Account created. Confirm your email once, then sign in with email and password.',
     authSignOutSuccess: 'Signed out successfully.',
     authSignOutFail: (reason) => `Sign-out failed: ${reason}`,
-    authEmailMissing: 'Enter your email first.',
+    authUsernameMissing: 'Enter your email first.',
+    authUsernameInvalid: 'Enter a valid email address.',
+    authPasswordMissing: 'Enter your password first.',
+    authPasswordTooShort: (minLen) => `Password must be at least ${minLen} characters.`,
     uploadUnavailable:
       'Model upload unavailable. Configure Supabase or start the local model server.',
     noFileSelected: 'Select a .glb file first.',
@@ -88,15 +106,24 @@ const i18n = {
     modelSelectLabel: 'Aktyvus modelis',
     modelUploadLabel: 'Ikelti .glb modeli',
     modelRenameLabel: 'Modelio pavadinimas',
+    modelOriginLabel: 'Modelio kilme',
+    modelOriginDefault: 'Originalus duomenu bazes modelis',
+    modelOriginLocalUpload: 'Vietinis ikelimas',
+    modelOriginCloudUploadUnknown: 'Supabase ikelimas',
+    modelOriginUploadedByYou: 'Ikelta jusu',
+    modelOriginUploadedByUser: (user) => `Ikelta naudotojo ${user}`,
+    modelOriginUnavailable: 'Kilme nezinoma',
     renamePlaceholder: 'Pasirinkite ikelta modeli',
     uploadButton: 'Prideti modeli',
     renameButton: 'Pervadinti modeli',
     deleteButton: 'Istrinti modeli',
-    authEmailLabel: 'Prisijungimo el. pastas',
-    authSendLinkButton: 'Siusti prisijungimo nuoroda',
+    authUsernameLabel: 'El. pastas',
+    authPasswordLabel: 'Slaptazodis',
+    authSignInButton: 'Prisijungti',
+    authSignUpButton: 'Sukurti paskyra',
     authSignOutButton: 'Atsijungti',
     authLocalModeStatus: 'Naudojamas vietinis modeliu API rezimas.',
-    authCloudSignedOutStatus: 'Debesies rezimas: prisijunkite modeliams valdyti.',
+    authCloudSignedOutStatus: 'Debesies rezimas: prisijunkite arba susikurkite paskyra modeliams valdyti.',
     authCloudSignedInStatus: (email) => `Debesies rezimas: prisijungta kaip ${email}.`,
     uploadInProgress: 'Ikeliamas modelis...',
     uploadSuccess: (name) => `Modelis pridetas: ${name}.`,
@@ -111,13 +138,21 @@ const i18n = {
     deleteFail: (reason) => `Istrinti nepavyko: ${reason}`,
     deleteDefaultBlocked: 'Numatyto modelio istrinti negalima.',
     deleteConfirm: (name) => `Istrinti modeli "${name}"?`,
-    authRequired: 'Prisijunkite, kad valdytumete debesies modelius.',
-    authLinkInProgress: 'Siunciama prisijungimo nuoroda...',
-    authLinkSent: 'Prisijungimo nuoroda issiusta. Patikrinkite el. pasta.',
-    authLinkFail: (reason) => `Prisijungimo nuorodos siusti nepavyko: ${reason}`,
+    authRequired: 'Prisijunkite su el. pastu ir slaptazodziu debesies modeliams valdyti.',
+    authSignInInProgress: 'Jungiamasi...',
+    authSignInSuccess: 'Sekmingai prisijungta.',
+    authSignInFail: (reason) => `Prisijungti nepavyko: ${reason}`,
+    authSignUpInProgress: 'Kuriama paskyra...',
+    authSignUpSuccess: 'Paskyra sukurta ir prisijungta.',
+    authSignUpFail: (reason) => `Sukurti paskyros nepavyko: ${reason}`,
+    authSignUpNeedsVerification:
+      'Paskyra sukurta. Patvirtinkite el. pasta viena karta, tada prisijunkite su el. pastu ir slaptazodziu.',
     authSignOutSuccess: 'Sekmingai atsijungta.',
     authSignOutFail: (reason) => `Atsijungti nepavyko: ${reason}`,
-    authEmailMissing: 'Pirma irasykite el. pasta.',
+    authUsernameMissing: 'Pirma irasykite el. pasta.',
+    authUsernameInvalid: 'Iveskite teisinga el. pasto adresa.',
+    authPasswordMissing: 'Pirma irasykite slaptazodi.',
+    authPasswordTooShort: (minLen) => `Slaptazodis turi buti bent ${minLen} simboliu.`,
     uploadUnavailable:
       'Modeliu ikelimas nepasiekiamas. Sukonfiguruokite Supabase arba paleiskite vietini modeliavimo serveri.',
     noFileSelected: 'Pirma pasirinkite .glb faila.',
@@ -142,6 +177,8 @@ const homeLink = document.querySelector('#home-link');
 const langToggle = document.querySelector('#lang-toggle');
 const modelPanelTitle = document.querySelector('#model-panel-title');
 const modelSelectLabel = document.querySelector('#model-select-label');
+const modelOriginLabel = document.querySelector('#model-origin-label');
+const modelOriginValue = document.querySelector('#model-origin-value');
 const modelUploadLabel = document.querySelector('#model-upload-label');
 const modelRenameLabel = document.querySelector('#model-rename-label');
 const modelSelect = document.querySelector('#model-select');
@@ -156,9 +193,12 @@ const modelFeedback = document.querySelector('#model-feedback');
 const authSection = document.querySelector('#auth-section');
 const authStatus = document.querySelector('#auth-status');
 const authForm = document.querySelector('#auth-form');
-const authEmailLabel = document.querySelector('#auth-email-label');
-const authEmailInput = document.querySelector('#auth-email');
-const authSendLinkButton = document.querySelector('#auth-send-link-button');
+const authUsernameLabel = document.querySelector('#auth-username-label');
+const authPasswordLabel = document.querySelector('#auth-password-label');
+const authUsernameInput = document.querySelector('#auth-username');
+const authPasswordInput = document.querySelector('#auth-password');
+const authSignInButton = document.querySelector('#auth-sign-in-button');
+const authSignUpButton = document.querySelector('#auth-sign-up-button');
 const authSignOutButton = document.querySelector('#auth-sign-out-button');
 
 const supabaseClient = supabaseConfigured
@@ -183,6 +223,7 @@ let uploadApiAvailable = true;
 let supabaseSession = null;
 let providerMode = supabaseConfigured ? 'supabase' : 'local';
 let loadSequence = 0;
+let supabaseSupportsUploaderEmail = null;
 
 function isDefaultModel(model) {
   if (!model) return true;
@@ -219,12 +260,19 @@ function getFeedbackText(lang, key, meta) {
   if (key === 'deleteFail') return t.deleteFail(meta);
   if (key === 'deleteDefaultBlocked') return t.deleteDefaultBlocked;
   if (key === 'authRequired') return t.authRequired;
-  if (key === 'authLinkInProgress') return t.authLinkInProgress;
-  if (key === 'authLinkSent') return t.authLinkSent;
-  if (key === 'authLinkFail') return t.authLinkFail(meta);
+  if (key === 'authSignInInProgress') return t.authSignInInProgress;
+  if (key === 'authSignInSuccess') return t.authSignInSuccess;
+  if (key === 'authSignInFail') return t.authSignInFail(meta);
+  if (key === 'authSignUpInProgress') return t.authSignUpInProgress;
+  if (key === 'authSignUpSuccess') return t.authSignUpSuccess;
+  if (key === 'authSignUpFail') return t.authSignUpFail(meta);
+  if (key === 'authSignUpNeedsVerification') return t.authSignUpNeedsVerification;
   if (key === 'authSignOutSuccess') return t.authSignOutSuccess;
   if (key === 'authSignOutFail') return t.authSignOutFail(meta);
-  if (key === 'authEmailMissing') return t.authEmailMissing;
+  if (key === 'authUsernameMissing') return t.authUsernameMissing;
+  if (key === 'authUsernameInvalid') return t.authUsernameInvalid;
+  if (key === 'authPasswordMissing') return t.authPasswordMissing;
+  if (key === 'authPasswordTooShort') return t.authPasswordTooShort(meta);
   if (key === 'uploadUnavailable') return t.uploadUnavailable;
   if (key === 'cloudLibraryLoadFail') return t.cloudLibraryLoadFail(meta);
   if (key === 'noFileSelected') return t.noFileSelected;
@@ -304,6 +352,45 @@ function getModelProviderLabel() {
   return providerMode === 'supabase' ? t.providerCloud : t.providerLocal;
 }
 
+function getModelOriginText(model) {
+  const t = i18n[currentLang];
+  if (!model) return t.modelOriginUnavailable;
+  if (isDefaultModel(model)) return t.modelOriginDefault;
+
+  const currentUsername = getSessionUsername(supabaseSession);
+  const uploadedBy = normalizeUsername(model.uploadedByEmail || model.uploadedBy || '');
+  if (uploadedBy) {
+    if (currentUsername && uploadedBy === currentUsername) {
+      return t.modelOriginUploadedByYou;
+    }
+    return t.modelOriginUploadedByUser(uploadedBy);
+  }
+
+  if (
+    providerMode === 'supabase' &&
+    model.userId &&
+    supabaseSession?.user?.id &&
+    model.userId === supabaseSession.user.id
+  ) {
+    return t.modelOriginUploadedByYou;
+  }
+
+  return providerMode === 'supabase' ? t.modelOriginCloudUploadUnknown : t.modelOriginLocalUpload;
+}
+
+function updateModelOriginUi() {
+  const t = i18n[currentLang];
+
+  if (modelOriginLabel) {
+    modelOriginLabel.textContent = t.modelOriginLabel;
+  }
+
+  if (modelOriginValue) {
+    const selectedModel = getModelById(selectedModelId);
+    modelOriginValue.textContent = getModelOriginText(selectedModel);
+  }
+}
+
 function updateAuthUi() {
   if (!authSection || !authStatus) return;
 
@@ -319,9 +406,9 @@ function updateAuthUi() {
     return;
   }
 
-  const userEmail = supabaseSession?.user?.email || '';
-  if (userEmail) {
-    authStatus.textContent = i18n[currentLang].authCloudSignedInStatus(userEmail);
+  if (supabaseSession?.user) {
+    const username = getSessionUsername(supabaseSession) || 'user';
+    authStatus.textContent = i18n[currentLang].authCloudSignedInStatus(username);
     if (authForm) {
       authForm.hidden = true;
     }
@@ -358,6 +445,8 @@ function syncModelActions() {
     modelNameInput.placeholder = i18n[currentLang].renamePlaceholder;
     modelNameInput.value = canManage ? selectedModel.name : '';
   }
+
+  updateModelOriginUi();
 }
 
 function applyLanguage() {
@@ -393,8 +482,12 @@ function applyLanguage() {
     modelRenameLabel.textContent = t.modelRenameLabel;
   }
 
-  if (authEmailLabel) {
-    authEmailLabel.textContent = t.authEmailLabel;
+  if (authUsernameLabel) {
+    authUsernameLabel.textContent = t.authUsernameLabel;
+  }
+
+  if (authPasswordLabel) {
+    authPasswordLabel.textContent = t.authPasswordLabel;
   }
 
   if (uploadButton) {
@@ -409,8 +502,12 @@ function applyLanguage() {
     deleteButton.textContent = t.deleteButton;
   }
 
-  if (authSendLinkButton) {
-    authSendLinkButton.textContent = t.authSendLinkButton;
+  if (authSignInButton) {
+    authSignInButton.textContent = t.authSignInButton;
+  }
+
+  if (authSignUpButton) {
+    authSignUpButton.textContent = t.authSignUpButton;
   }
 
   if (authSignOutButton) {
@@ -425,8 +522,12 @@ function applyLanguage() {
     modelNameInput.setAttribute('aria-label', t.modelRenameLabel);
   }
 
-  if (authEmailInput) {
-    authEmailInput.setAttribute('aria-label', t.authEmailLabel);
+  if (authUsernameInput) {
+    authUsernameInput.setAttribute('aria-label', t.authUsernameLabel);
+  }
+
+  if (authPasswordInput) {
+    authPasswordInput.setAttribute('aria-label', t.authPasswordLabel);
   }
 
   renderModelOptions();
@@ -533,6 +634,25 @@ function isGlbFile(file) {
   return file.name.toLowerCase().endsWith('.glb');
 }
 
+function normalizeUsername(rawValue) {
+  return rawValue.trim().toLowerCase();
+}
+
+function isValidUsername(username) {
+  return emailPattern.test(username);
+}
+
+function getSessionUsername(session) {
+  return (session?.user?.email || '').trim().toLowerCase();
+}
+
+function isMissingSupabaseColumn(error, columnName) {
+  if (!error || !columnName) return false;
+  const errorCode = String(error.code || '').trim();
+  const errorMessage = String(error.message || '').toLowerCase();
+  return errorCode === '42703' && errorMessage.includes(columnName.toLowerCase());
+}
+
 function extractApiError(payload, statusCode) {
   if (payload && typeof payload.error === 'string') {
     return payload.error;
@@ -546,6 +666,8 @@ function mapSupabaseRowToModel(row) {
     id: row.id,
     name: row.name || 'Uploaded Model',
     source: 'upload',
+    userId: row.user_id || null,
+    uploadedByEmail: normalizeUsername(row.uploaded_by_email || ''),
     storagePath: row.storage_path,
     originalFileName: row.original_file_name || '',
     createdAt: row.created_at || null,
@@ -567,7 +689,12 @@ async function fetchLocalModels() {
   const payload = await response.json();
   const remoteModels = Array.isArray(payload.models) ? payload.models : [];
 
-  return remoteModels.filter((model) => model && typeof model.id === 'string' && typeof model.path === 'string');
+  return remoteModels
+    .filter((model) => model && typeof model.id === 'string' && typeof model.path === 'string')
+    .map((model) => ({
+      ...model,
+      uploadedBy: normalizeUsername(model.uploadedBy || '')
+    }));
 }
 
 async function fetchSupabaseModels() {
@@ -575,13 +702,29 @@ async function fetchSupabaseModels() {
     return [];
   }
 
-  const { data, error } = await supabaseClient
+  const selectWithUploader = 'id,name,storage_path,original_file_name,created_at,updated_at,user_id,uploaded_by_email';
+  const selectWithoutUploader = 'id,name,storage_path,original_file_name,created_at,updated_at,user_id';
+  const selectColumns = supabaseSupportsUploaderEmail === false ? selectWithoutUploader : selectWithUploader;
+
+  let { data, error } = await supabaseClient
     .from(supabaseModelsTable)
-    .select('id,name,storage_path,original_file_name,created_at,updated_at')
+    .select(selectColumns)
     .order('created_at', { ascending: false });
+
+  if (error && supabaseSupportsUploaderEmail !== false && isMissingSupabaseColumn(error, 'uploaded_by_email')) {
+    supabaseSupportsUploaderEmail = false;
+    ({ data, error } = await supabaseClient
+      .from(supabaseModelsTable)
+      .select(selectWithoutUploader)
+      .order('created_at', { ascending: false }));
+  }
 
   if (error) {
     throw error;
+  }
+
+  if (supabaseSupportsUploaderEmail === null && selectColumns === selectWithUploader) {
+    supabaseSupportsUploaderEmail = true;
   }
 
   return Array.isArray(data) ? data.map(mapSupabaseRowToModel) : [];
@@ -738,6 +881,7 @@ function fileToBase64(file) {
 
 async function uploadModelToLocalApi(file, fallbackName) {
   const dataBase64 = await fileToBase64(file);
+  const uploadedBy = getSessionUsername(supabaseSession);
   const response = await fetch('/api/models', {
     method: 'POST',
     headers: {
@@ -746,7 +890,8 @@ async function uploadModelToLocalApi(file, fallbackName) {
     body: JSON.stringify({
       fileName: file.name,
       name: fallbackName,
-      dataBase64
+      dataBase64,
+      uploadedBy
     })
   });
 
@@ -776,20 +921,46 @@ async function uploadModelToSupabase(file, fallbackName) {
     throw uploadError;
   }
 
-  const { data, error: insertError } = await supabaseClient
+  const insertPayload = {
+    name: normalizedName,
+    storage_path: storagePath,
+    original_file_name: file.name
+  };
+
+  const uploaderEmail = getSessionUsername(supabaseSession);
+  if (supabaseSupportsUploaderEmail !== false && uploaderEmail) {
+    insertPayload.uploaded_by_email = uploaderEmail;
+  }
+
+  let { data, error: insertError } = await supabaseClient
     .from(supabaseModelsTable)
-    .insert({
-      name: normalizedName,
-      storage_path: storagePath,
-      original_file_name: file.name
-    })
-    .select('id,name,storage_path,original_file_name,created_at,updated_at')
+    .insert(insertPayload)
+    .select('*')
     .limit(1)
     .single();
+
+  if (
+    insertError &&
+    Object.prototype.hasOwnProperty.call(insertPayload, 'uploaded_by_email') &&
+    isMissingSupabaseColumn(insertError, 'uploaded_by_email')
+  ) {
+    supabaseSupportsUploaderEmail = false;
+    delete insertPayload.uploaded_by_email;
+    ({ data, error: insertError } = await supabaseClient
+      .from(supabaseModelsTable)
+      .insert(insertPayload)
+      .select('*')
+      .limit(1)
+      .single());
+  }
 
   if (insertError) {
     await supabaseClient.storage.from(supabaseBucket).remove([storagePath]);
     throw insertError;
+  }
+
+  if (supabaseSupportsUploaderEmail === null) {
+    supabaseSupportsUploaderEmail = true;
   }
 
   return mapSupabaseRowToModel(data);
@@ -821,7 +992,7 @@ async function renameModelInSupabase(modelId, nextName) {
     .from(supabaseModelsTable)
     .update({ name: nextName })
     .eq('id', modelId)
-    .select('id,name,storage_path,original_file_name,created_at,updated_at')
+    .select('*')
     .limit(1)
     .single();
 
@@ -1000,32 +1171,102 @@ async function deleteSelectedModel() {
   }
 }
 
-async function sendSupabaseSignInLink() {
+function getAuthCredentials() {
+  const username = normalizeUsername(authUsernameInput?.value || '');
+  const password = authPasswordInput?.value || '';
+  const email = username;
+
+  return { username, password, email };
+}
+
+function validateAuthCredentials({ username, password }) {
+  if (!username) {
+    setFeedback('authUsernameMissing');
+    return false;
+  }
+
+  if (!isValidUsername(username)) {
+    setFeedback('authUsernameInvalid');
+    return false;
+  }
+
+  if (!password) {
+    setFeedback('authPasswordMissing');
+    return false;
+  }
+
+  if (password.length < minPasswordLength) {
+    setFeedback('authPasswordTooShort', minPasswordLength);
+    return false;
+  }
+
+  return true;
+}
+
+async function signInWithSupabasePassword() {
   if (!supabaseClient) return;
 
-  const email = (authEmailInput?.value || '').trim();
-  if (!email) {
-    setFeedback('authEmailMissing');
+  const credentials = getAuthCredentials();
+  if (!validateAuthCredentials(credentials)) {
     return;
   }
 
-  setFeedback('authLinkInProgress');
+  setFeedback('authSignInInProgress');
 
   try {
-    const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
-    const { error } = await supabaseClient.auth.signInWithOtp({
-      email,
-      options: { redirectTo }
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password
     });
 
     if (error) {
       throw error;
     }
 
-    setFeedback('authLinkSent');
+    setFeedback('authSignInSuccess');
   } catch (error) {
     console.error(error);
-    setFeedback('authLinkFail', error.message || 'Unknown error');
+    setFeedback('authSignInFail', error.message || 'Unknown error');
+  }
+}
+
+async function signUpWithSupabasePassword() {
+  if (!supabaseClient) return;
+
+  const credentials = getAuthCredentials();
+  if (!validateAuthCredentials(credentials)) {
+    return;
+  }
+
+  setFeedback('authSignUpInProgress');
+
+  try {
+    const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+    const localPart = credentials.email.split('@')[0] || credentials.email;
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: credentials.email,
+      password: credentials.password,
+      options: {
+        emailRedirectTo: redirectTo,
+        data: {
+          username: localPart
+        }
+      }
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data.session) {
+      setFeedback('authSignUpNeedsVerification');
+      return;
+    }
+
+    setFeedback('authSignUpSuccess');
+  } catch (error) {
+    console.error(error);
+    setFeedback('authSignUpFail', error.message || 'Unknown error');
   }
 }
 
@@ -1217,7 +1458,13 @@ if (deleteButton) {
 if (authForm) {
   authForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    await sendSupabaseSignInLink();
+    await signInWithSupabasePassword();
+  });
+}
+
+if (authSignUpButton) {
+  authSignUpButton.addEventListener('click', async () => {
+    await signUpWithSupabasePassword();
   });
 }
 

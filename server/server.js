@@ -294,6 +294,7 @@ async function handleUploadModel(req, res) {
   const payload = await readJsonBody(req, maxUploadBytes * 1.4);
   const originalFileName = typeof payload.fileName === 'string' ? payload.fileName.trim() : '';
   const dataBase64 = typeof payload.dataBase64 === 'string' ? payload.dataBase64.trim() : '';
+  const uploadedBy = typeof payload.uploadedBy === 'string' ? payload.uploadedBy.trim().toLowerCase() : '';
 
   if (!originalFileName || !dataBase64) {
     throw createHttpError(400, 'fileName and dataBase64 are required.');
@@ -326,6 +327,7 @@ async function handleUploadModel(req, res) {
     name: deriveModelName(originalFileName, payload.name),
     path: `/uploads/${uniqueFileName}`,
     source: 'upload',
+    uploadedBy,
     originalFileName,
     createdAt: new Date().toISOString()
   };
